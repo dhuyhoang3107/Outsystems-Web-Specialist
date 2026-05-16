@@ -42,17 +42,19 @@ function setHash(path) {
 function navTemplate(active) {
   const link = (href, label, id) =>
     `<a href="#/${href}" class="${active === id ? "active" : ""}" data-nav="${id}">${label}</a>`;
+  const mockNavLabel =
+    '<span class="nav-text-full">Thi thử (' +
+    MOCK_QUESTION_COUNT +
+    " câu · " +
+    MOCK_DURATION_MIN +
+    ' phút)</span><span class="nav-text-short">Thi thử</span>';
   return `
     ${link("", "Trang chủ", "home")}
     <div class="nav-group">Lý thuyết</div>
     ${theorySections.map((s) => link(`theory/${s.slug}`, s.title, `t-${s.slug}`)).join("")}
     <div class="nav-group">Luyện tập</div>
     ${link("practice", "Câu hỏi theo chủ đề", "practice")}
-    ${link(
-      "mock",
-      `<span class="nav-text-full">Thi thử (${MOCK_QUESTION_COUNT} câu · ${MOCK_DURATION_MIN} phút)</span><span class="nav-text-short">Thi thử</span>`,
-      "mock"
-    )}
+    ${link("mock", mockNavLabel, "mock")}
   `;
 }
 

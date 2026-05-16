@@ -18,6 +18,8 @@
   --safe-bottom: env(safe-area-inset-bottom, 0px);
   --safe-left: env(safe-area-inset-left, 0px);
   --safe-right: env(safe-area-inset-right, 0px);
+  /* Thêm khoảng trống phía dưới: thanh URL / gesture bar mobile (safe-area thường không đủ) */
+  --content-bottom-space: max(var(--safe-bottom), 0.75rem);
 }
 
 *,
@@ -95,7 +97,7 @@ body {
 }
 
 .sidebar-inner {
-  padding: 1.25rem 1rem calc(1.5rem + var(--safe-bottom));
+  padding: 1.25rem 1rem calc(1.5rem + var(--content-bottom-space));
   min-height: 100%;
 }
 
@@ -181,7 +183,7 @@ body {
 
 .main {
   padding: clamp(0.75rem, 3vw, 2.5rem);
-  padding-bottom: calc(clamp(0.75rem, 3vw, 2.5rem) + var(--safe-bottom));
+  padding-bottom: calc(clamp(0.75rem, 3vw, 2.5rem) + var(--content-bottom-space));
   max-width: 900px;
   width: 100%;
   margin: 0 auto;
@@ -636,6 +638,10 @@ code {
 }
 
 @media (max-width: 900px) {
+  :root {
+    --content-bottom-space: calc(var(--safe-bottom) + 4.75rem);
+  }
+
   .layout {
     display: flex;
     flex-direction: column;
@@ -723,7 +729,7 @@ code {
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
     overscroll-behavior: contain;
-    padding: 1rem 1rem calc(1.25rem + var(--safe-bottom));
+    padding: 1rem 1rem calc(1.25rem + var(--content-bottom-space));
   }
 
   .layout.nav-open .sidebar {
