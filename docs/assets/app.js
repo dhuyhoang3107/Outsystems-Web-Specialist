@@ -9,6 +9,7 @@ import {
 
 const app = document.getElementById("app");
 const navEl = document.getElementById("nav");
+const layoutEl = document.getElementById("layout");
 
 let mockTimerId = null;
 function clearMockTimer() {
@@ -47,7 +48,11 @@ function navTemplate(active) {
     ${theorySections.map((s) => link(`theory/${s.slug}`, s.title, `t-${s.slug}`)).join("")}
     <div class="nav-group">Luyện tập</div>
     ${link("practice", "Câu hỏi theo chủ đề", "practice")}
-    ${link("mock", "Thi thử (${MOCK_QUESTION_COUNT} câu · ${MOCK_DURATION_MIN} phút)", "mock")}
+    ${link(
+      "mock",
+      `<span class="nav-text-full">Thi thử (${MOCK_QUESTION_COUNT} câu · ${MOCK_DURATION_MIN} phút)</span><span class="nav-text-short">Thi thử</span>`,
+      "mock"
+    )}
   `;
 }
 
@@ -165,7 +170,6 @@ function renderPractice(params) {
   }
 
   const q = practiceState.order[practiceState.index];
-  const topicLabel = questionTopics.find((t) => t.id === topic)?.label || "Tất cả";
 
   const opts = ["A", "B", "C", "D"]
     .map(
@@ -189,9 +193,9 @@ function renderPractice(params) {
   app.innerHTML = `
     <div class="panel">
       <h1>Luyện theo chủ đề</h1>
-      <p>
-        <label>Chủ đề: 
-          <select id="topicSelect" style="margin-left:0.35rem;padding:0.35rem 0.5rem;border-radius:6px;background:var(--surface-2);color:var(--text);border:1px solid var(--border);font-family:inherit;">
+      <div class="topic-toolbar">
+        <label>Chủ đề
+          <select id="topicSelect" class="topic-select" aria-label="Chọn chủ đề">
             ${questionTopics
               .map(
                 (t) =>
@@ -200,8 +204,8 @@ function renderPractice(params) {
               .join("")}
           </select>
         </label>
-        <span style="color:var(--muted);font-size:0.9rem;margin-left:0.5rem;">Câu ${practiceState.index + 1} / ${practiceState.order.length}</span>
-      </p>
+        <span class="topic-progress">Câu ${practiceState.index + 1} / ${practiceState.order.length}</span>
+      </div>
       <div class="quiz-q">${esc(q.question)}</div>
       <div class="options" id="practiceOptions">${opts}</div>
       ${
@@ -363,11 +367,13 @@ function renderMockExam() {
 
   app.innerHTML = `
     <div class="panel">
-      <div class="timer-bar ${timerClass}">
-        <span>Thời gian còn: <strong>${formatMs(remaining)}</strong></span>
-        <span>Câu ${state.current + 1} / ${ids.length}</span>
+      <div class="mock-sticky-head">
+        <div class="timer-bar ${timerClass}">
+          <span>Thời gian còn: <strong>${formatMs(remaining)}</strong></span>
+          <span>Câu ${state.current + 1} / ${ids.length}</span>
+        </div>
+        <div class="question-nav" role="toolbar" aria-label="Chuyển câu">${pills}</div>
       </div>
-      <div class="question-nav">${pills}</div>
       <div class="quiz-q">${esc(q.question)}</div>
       <div class="options" id="mockOptions">${opts}</div>
       <div class="btn-row">
@@ -472,13 +478,15 @@ function renderMockResult(state) {
     <div class="panel">
       <h1>Kết quả thi thử</h1>
       <p><strong>${correct}</strong> / ${state.questions.length} câu đúng (${Math.round((correct / state.questions.length) * 100)}%).</p>
-      <div class="btn-row" style="margin-bottom:1rem;">
+      <div class="btn-row mock-actions">
         <button type="button" class="btn btn-primary" id="againMock">Làm bài mới</button>
       </div>
-      <table>
-        <thead><tr><th>Câu (rút gọn)</th><th>Bạn chọn</th><th>Đáp án</th><th>Kết quả</th></tr></thead>
-        <tbody>${rows}</tbody>
-      </table>
+      <div class="table-scroll-wrap">
+        <table class="results-table">
+          <thead><tr><th>Câu (rút gọn)</th><th>Bạn chọn</th><th>Đáp án</th><th>Kết quả</th></tr></thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>
       <h2>Giải thích từng câu</h2>
       ${state.questions
         .map((id) => {
@@ -519,8 +527,46 @@ function route() {
   return renderHome();
 }
 
+function closeMobileNav() {
+  if (!layoutEl) return;
+  layoutEl.classList.remove("nav-open");
+  const toggle = document.getElementById("menuToggle");
+  if (toggle) {
+    toggle.setAttribute("aria-expanded", "false");
+    toggle.setAttribute("aria-label", "Mở điều hướng");
+  }
+  document.documentElement.classList.remove("nav-locked");
+}
+
+function initMobileNav() {
+  const toggle = document.getElementById("menuToggle");
+  const backdrop = document.getElementById("navBackdrop");
+  if (!layoutEl || !toggle || toggle.dataset.bound === "1") return;
+  toggle.dataset.bound = "1";
+
+  const open = () => {
+    layoutEl.classList.add("nav-open");
+    toggle.setAttribute("aria-expanded", "true");
+    toggle.setAttribute("aria-label", "Đóng điều hướng");
+    document.documentElement.classList.add("nav-locked");
+  };
+
+  toggle.addEventListener("click", () => {
+    if (layoutEl.classList.contains("nav-open")) closeMobileNav();
+    else open();
+  });
+
+  backdrop?.addEventListener("click", closeMobileNav);
+
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") closeMobileNav();
+  });
+}
+
 window.addEventListener("hashchange", () => {
+  closeMobileNav();
   clearMockTimer();
   route();
 });
+initMobileNav();
 route();
